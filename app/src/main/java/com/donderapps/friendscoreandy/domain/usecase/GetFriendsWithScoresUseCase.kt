@@ -23,13 +23,13 @@ class GetFriendsWithScoresUseCase @Inject constructor(
         return friendRepository.getAll().flatMapLatest { friends ->
             if (friends.isEmpty()) return@flatMapLatest flowOf(emptyList())
 
-            val friendFlows = friends.map { friend -> buildFriendWithScore(friend) }
+            val (weekStart, weekEnd) = getWeekBoundsUseCase.execute()
+            val friendFlows = friends.map { friend -> buildFriendWithScore(friend, weekStart, weekEnd) }
             combine(friendFlows) { it.toList() }
         }
     }
 
-    private fun buildFriendWithScore(friend: Friend): Flow<FriendWithScore> {
-        val (weekStart, weekEnd) = getWeekBoundsUseCase.execute()
+    private fun buildFriendWithScore(friend: Friend, weekStart: Long, weekEnd: Long): Flow<FriendWithScore> {
         return combine(
             friendRepository.getAllTimeScore(friend.id),
             friendRepository.getWeeklyScore(friend.id, weekStart, weekEnd),
