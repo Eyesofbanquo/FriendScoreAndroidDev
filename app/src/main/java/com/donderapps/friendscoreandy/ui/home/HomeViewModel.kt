@@ -38,12 +38,23 @@ class HomeViewModel @Inject constructor(
                 }
                 .collect { friends ->
                     val trophies = getTrophyRankingsUseCase.execute(friends)
+                    var allTimeSum = 0.0
+                    var allTimeCount = 0
+                    var weeklySum = 0.0
+                    var weeklyCount = 0
+
                     val friendsWithTrophies = friends.map { friend ->
+                        friend.score.allTime?.let { allTimeSum += it; allTimeCount++ }
+                        friend.score.weekly?.let { weeklySum += it; weeklyCount++ }
                         friend.copy(trophy = trophies[friend.friend.id])
                     }
+
                     val sortConfig = _uiState.value.sortConfig
                     val sorted = applySorting(friendsWithTrophies, sortConfig)
-                    val globalScore = computeGlobalScore(friendsWithTrophies, sortConfig.mode)
+                    val globalScore = when (sortConfig.mode) {
+                        SortMode.WEEKLY_SCORE -> if (weeklyCount > 0) (weeklySum / weeklyCount).toFloat() else null
+                        else -> if (allTimeCount > 0) (allTimeSum / allTimeCount).toFloat() else null
+                    }
 
                     _uiState.update {
                         it.copy(
