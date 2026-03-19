@@ -33,7 +33,7 @@ interface FriendDao {
     fun getTagsForFriend(friendId: String): Flow<List<TagEntity>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertFriendTagCrossRef(crossRef: FriendTagCrossRef)
+    suspend fun insertFriendTagCrossRefs(crossRefs: List<FriendTagCrossRef>)
 
     @Query("DELETE FROM friend_tag WHERE friendId = :friendId")
     suspend fun clearTagsForFriend(friendId: String)
@@ -41,9 +41,8 @@ interface FriendDao {
     @Transaction
     suspend fun setTagsForFriend(friendId: String, tagIds: List<String>) {
         clearTagsForFriend(friendId)
-        tagIds.forEach { tagId ->
-            insertFriendTagCrossRef(FriendTagCrossRef(friendId, tagId))
-        }
+        val crossRefs = tagIds.map { tagId -> FriendTagCrossRef(friendId, tagId) }
+        insertFriendTagCrossRefs(crossRefs)
     }
 
     @Query("SELECT AVG(rating) FROM events WHERE friendId = :friendId")
