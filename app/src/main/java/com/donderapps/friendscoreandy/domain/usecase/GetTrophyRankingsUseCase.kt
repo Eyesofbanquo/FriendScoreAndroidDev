@@ -20,13 +20,10 @@ class GetTrophyRankingsUseCase @Inject constructor() {
 
         while (position < ranked.size && trophyIndex < trophyValues.size) {
             val currentScore = ranked[position].score.allTime
-            val tied = ranked.filter { it.score.allTime == currentScore }
-
-            tied.forEach { friend ->
-                trophies[friend.friend.id] = trophyValues[trophyIndex]
+            while (position < ranked.size && ranked[position].score.allTime == currentScore) {
+                trophies[ranked[position].friend.id] = trophyValues[trophyIndex]
+                position++
             }
-
-            position += tied.size
             trophyIndex = position.coerceAtMost(trophyValues.size)
         }
 
